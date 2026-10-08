@@ -1,0 +1,94 @@
+/* ESTILOS ESPECÍFICOS PARA RECONOCIMIENTO A PROFESORES */
+
+
+.filter-controls {
+    grid-column: 3 / 5;
+    grid-row: 1 / 4;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    
+}
+
+
+/* Botón Ver Perfil */
+.btn-ver-perfil {
+    align-self: flex-start;
+    background-color: transparent;
+    border: 2px solid #3498db;
+    color: #3498db;
+    border-radius: 25px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 120px;
+}
+
+.btn-ver-perfil:hover {
+    background-color: #3498db;
+    color: white;
+    transform: translateY(-1px);
+}
+
+.btn-ver-perfil span {
+    display: inline-block;
+}
+
+/* Información de reconocimiento */
+.reconocimiento-info {
+    background-color: #f8f9fa;
+    padding: 1.5vh 2vh;
+    border-radius: 8px;
+    border-left: 4px solid #3498db;
+}
+
+.reconocimiento-info p {
+    margin: 0.5vh 0;
+    color: #2c3e50;
+    font-size: 0.95rem;
+}
+
+.reconocimiento-info strong {
+    color: #2c3e50;
+    font-weight: 600;
+}
+
+/* Ajustes responsivos 
+@media (max-width: 1200px) {
+    .filter h1 {
+        font-size: 3rem;
+    }
+    
+    .filter h2 {
+        font-size: 2rem;
+    }
+    
+    .icono-profesor {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .info-basica h2 {
+        font-size: 1.3rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .card-header {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .icono-profesor {
+        margin-right: 0;
+        margin-bottom: 1.5vh;
+    }
+    
+    .btn-ver-perfil {
+        align-self: center;
+    }
+}*/
