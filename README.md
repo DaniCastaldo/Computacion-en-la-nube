@@ -18,3 +18,24 @@ Problemática que Resuelve:
 Diagrama de arquitectura:  
 
 <img width="457" height="772" alt="image" src="https://github.com/user-attachments/assets/35af1db3-9a98-4488-91b2-37405a9723e8" />
+
+## Contenerización (Docker)
+
+Se creó un `Dockerfile` para empaquetar la API Backend (`Backend-SoyUcab`).
+
+* **Imagen Base:** `node:18-alpine` (ligera y optimizada para producción).
+* **Contenedor:** Aísla la ejecución del runtime Node.js, Express y sus dependencias.
+* **Puertos:** Se expone el puerto `3000` (`EXPOSE 3000`), asociando las peticiones externas al proceso interno de Express.
+* **Variables de Entorno:**
+  * `PORT`: Puerto de escucha del servidor (3000 por defecto).
+  * `NODE_ENV`: Entorno de producción (`production`).
+  * `DATABASE_URL`: Inyectada en tiempo de ejecución para la conexión remota con Supabase (aislada del repositorio).
+* **Ejecución local del contenedor:**
+  ```bash
+  docker build -t backend-soyucab .
+  docker run -p 3000:3000 --env-file .env backend-soyucab
+* **Verificar que está respondiendo:**
+  1. Se abre el navegador web o Postman y se ingresa a: http://localhost:3000 (o la ruta de prueba de la API).
+  2. Si responde, ¡el contenedor está funcionando perfecto!
+  3. Para ver los logs de lo que pasa dentro del contenedor, se puede usar: docker logs backend-container
+  4. Para apagar el contenedor cuando se termine la prueba: docker stop backend-container  
