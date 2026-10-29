@@ -13,7 +13,7 @@ const reportController = {
       res.json({ success: true, count: result.rows.length, data: result.rows }); } 
       
       catch (error) { 
-        console.error('❌ Error obteniendo top empresas:', error); 
+        console.error(' Error obteniendo top empresas:', error); 
         res.status(500).json({ success: false, error: 'Error al obtener reporte de empresas' }); 
       } 
   },
@@ -30,7 +30,7 @@ const reportController = {
       });
 
     } catch (error) {
-      console.error('❌ Error obteniendo reporte de tutores:', error);
+      console.error('Error obteniendo reporte de tutores:', error);
       res.status(500).json({
         success: false,
         error: 'Error al obtener reporte de tutores'
@@ -50,7 +50,7 @@ const reportController = {
       });
 
     } catch (error) {
-      console.error('❌ Error obteniendo reporte de menciones:', error);
+      console.error(' Error obteniendo reporte de menciones:', error);
       res.status(500).json({
         success: false,
         error: 'Error al obtener reporte de menciones'
@@ -70,7 +70,7 @@ const reportController = {
       });
 
     } catch (error) {
-      console.error('❌ Error obteniendo ubicación de egresados:', error);
+      console.error(' Error obteniendo ubicación de egresados:', error);
       res.status(500).json({
         success: false,
         error: 'Error al obtener ubicación de egresados'

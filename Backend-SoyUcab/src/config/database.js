@@ -15,11 +15,11 @@ const pool = new Pool({
 
 // Verificar conexión al iniciar
 pool.on('connect', () => {
-  console.log('✅ Conectado a PostgreSQL');
+  console.log(' Conectado a PostgreSQL');
 });
 
 pool.on('error', (err) => {
-  console.error('❌ Error en pool de PostgreSQL:', err.message);
+  console.error(' Error en pool de PostgreSQL:', err.message);
 });
 
 // Métodos para ejecutar queries
@@ -38,7 +38,7 @@ const query = async (text, params) => {
     
     return result;
   } catch (error) {
-    console.error('❌ Error en query:', error.message);
+    console.error(' Error en query:', error.message);
     console.error('   Query:', text.substring(0, 200));
     throw error;
   }
