@@ -160,7 +160,7 @@ CREATE TABLE soyucab.grupo (
 );
 
 CREATE TYPE soyucab.privacidad_grupo AS ENUM ('publico', 'privado', 'secreto');
-ALTER TABLE soyucab.grupo ADD COLUMN privacidad soyucab.privacidad_grupo DEFAULT 'publico';
+ALTER TABLE soyucab.grupo ADD COLUMN IF NOT EXISTS privacidad soyucab.privacidad_grupo DEFAULT 'publico';
 
 CREATE TYPE soyucab.estado_solicitud AS ENUM (
     'pendiente',
@@ -1952,7 +1952,7 @@ BEGIN
     WITH TutorMetrics AS (
         SELECT
             tm.email_tutor,
-            COUNT(DISTINCT tm.codigo_materia)::BIGINT AS total_materias,
+            COUNT(DISTINCT tm.materia_nombre)::BIGINT AS total_materias,
             COALESCE(est.total_estudiantes, 0)::BIGINT AS total_estudiantes
         FROM
             soyucab.tutorias_materia tm
@@ -2050,3 +2050,10 @@ BEGIN
         prr.anio_reconocimiento DESC, p.apellidos;
 END;
 $$ LANGUAGE plpgsql;
+
+-- Permisos de supabase
+
+GRANT USAGE ON SCHEMA soyucab TO anon, authenticated, service_role;
+GRANT ALL ON ALL TABLES IN SCHEMA soyucab TO anon, authenticated, service_role;
+GRANT ALL ON ALL ROUTINES IN SCHEMA soyucab TO anon, authenticated, service_role;
+GRANT ALL ON ALL SEQUENCES IN SCHEMA soyucab TO anon, authenticated, service_role;
