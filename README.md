@@ -38,4 +38,13 @@ Se creó un `Dockerfile` para empaquetar la API Backend (`Backend-SoyUcab`).
   1. Se abre el navegador web o Postman y se ingresa a: http://localhost:3000 (o la ruta de prueba de la API).
   2. Si responde, el contenedor está funcionando bien.
   3. Para ver los logs de lo que pasa dentro del contenedor, se puede usar: docker logs backend-container
-  4. Para apagar el contenedor cuando se termine la prueba: docker stop backend-container  
+  4. Para apagar el contenedor cuando se termine la prueba: docker stop backend-container
+# Despliegue en producción (Render)
+Se realizó el despliegue del contenedor backend en la plataforma PaaS Render para su ejecución continua en la nube.
+- **Plataforma:** Render (Web Service).
+- **Runtime:** Docker (construido desde el Dockerfile en la carpeta `Backend-SoyUcab`).
+- **Base de Datos:** Conexión remota activa con PostgreSQL en Supabase mediante TLS/SSL.
+- **URL Base de Producción:** https://soyucab-backend.onrender.com
+- **Endpoints de Verificación:**
+  1. Estado del servicio (Health Check): https://soyucab-backend.onrender.com/api/health
+  2. Catálogo de rutas de la API: https://soyucab-backend.onrender.com/api
