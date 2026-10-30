@@ -49,3 +49,16 @@ Se realizó el despliegue del contenedor backend en la plataforma PaaS Render pa
 - **Endpoints de Verificación:**
   1. Estado del servicio (Health Check): https://soyucab-backend.onrender.com/api/health
   2. Catálogo de rutas de la API: https://soyucab-backend.onrender.com/api
+# Despliegue del Frontend (Vercel)
+
+El frontend de la aplicación se encuentra alojado y desplegado de manera continua mediante **Vercel** (PaaS/Serverless Hosting).
+
+### Configuración e Integración
+1. **Conexión al Repositorio:** Se vinculó el proyecto directamente con el repositorio de GitHub (`main` branch) para habilitar el despliegue automático ante nuevos cambios (Pipeline CI/CD).
+2. **Directorio Raíz (Root Directory):** Se configuró la compilación apuntando al directorio `SoyUcab-Project/` donde reside el código del cliente.
+3. **Dominio Público:** La interfaz web quedó disponible en producción a través del dominio generado por la plataforma:
+   `https://computacion-en-la-nube-ten.vercel.app`
+
+### Ajustes Técnicos Realizados
+- **Compatibilidad de Rutas y Recursos (`Header.vue`):** Se corrigieron las referencias a URLs estáticas y rutas de imágenes en el componente `Header.vue` (`ffc96a2`) para cumplir con las políticas estrictas del motor de compilación y servidor estático de Vercel.
+- **Integración Continua (CI/CD):** Cualquier commit o *pull request* integrado a la rama principal activa un build automatizado en Vercel que actualiza el entorno de producción en tiempo real.
