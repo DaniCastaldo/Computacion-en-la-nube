@@ -1,6 +1,63 @@
 const db = require('../config/database');
 const bcrypt = require('bcrypt');
 
+const normalizeBirthDate = (value) => {
+  if (typeof value !== 'string') {
+    return null;
+  }
+
+  const date = value.trim();
+  const isoMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date);
+  const spanishMatch = /^(\d{1,2})\s+de\s+([a-záéíóú]+)\s+de\s+(\d{4})$/i.exec(date);
+  const spanishMonths = {
+    enero: 1,
+    febrero: 2,
+    marzo: 3,
+    abril: 4,
+    mayo: 5,
+    junio: 6,
+    julio: 7,
+    agosto: 8,
+    septiembre: 9,
+    setiembre: 9,
+    octubre: 10,
+    noviembre: 11,
+    diciembre: 12
+  };
+
+  let year;
+  let month;
+  let day;
+
+  if (isoMatch) {
+    [, year, month, day] = isoMatch;
+    year = Number(year);
+    month = Number(month);
+    day = Number(day);
+  } else if (spanishMatch) {
+    day = Number(spanishMatch[1]);
+    month = spanishMonths[spanishMatch[2].toLocaleLowerCase('es')];
+    year = Number(spanishMatch[3]);
+  } else {
+    return null;
+  }
+
+  if (!month || year < 1 || year > 9999) {
+    return null;
+  }
+
+  const parsedDate = new Date(Date.UTC(year, month - 1, day));
+  if (
+    parsedDate.getUTCFullYear() !== year ||
+    parsedDate.getUTCMonth() !== month - 1 ||
+    parsedDate.getUTCDate() !== day
+  ) {
+    return null;
+  }
+
+  return `${String(year).padStart(4, '0')}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+};
+
 const memberController = {
   // GET /api/members - Obtener todos los miembros (con filtros)
   async getAllMembers(req, res) {
@@ -394,6 +451,14 @@ const memberController = {
         });
       }
 
+      const fechaNacimientoISO = normalizeBirthDate(fecha_nacimiento);
+      if (!fechaNacimientoISO) {
+        return res.status(400).json({
+          success: false,
+          error: 'fecha_nacimiento debe ser una fecha válida en formato YYYY-MM-DD o en español (por ejemplo, "3 de junio de 1996")'
+        });
+      }
+
       // Verificar unicidad
       const checks = await Promise.all([
         db.query('SELECT 1 FROM soyucab.miembro WHERE email = $1', [email]),
@@ -457,7 +522,7 @@ const memberController = {
             nombres,
             apellidos,
             sexo,
-            fecha_nacimiento,
+            fechaNacimientoISO,
             ocupacion_actual || null,
             empresa_actual || null,
             influencer,
@@ -529,14 +594,13 @@ const memberController = {
           );
 
           // Insertar profesor
-          // Insertar profesor
           await db.query(
             `INSERT INTO soyucab.profesor 
-               (email_persona, tipo_rol, fecha_inicio, fecha_ingreso, categoria, dedicacion)
-             VALUES ($1, 'Profesor', CURRENT_DATE, COALESCE($2, CURRENT_DATE), $3, $4)`,
+             (email_persona, tipo_rol, fecha_inicio, fecha_ingreso, categoria, dedicacion)
+             VALUES ($1, 'Profesor', CURRENT_DATE, $2, $3, $4)`,
             [
               email,
-              fecha_ingreso_profesor ? new Date(fecha_ingreso_profesor).toISOString().split('T')[0] : null,
+              fecha_ingreso_profesor || CURRENT_DATE,
               categoria_profesor || null,
               dedicacion_profesor || null
             ]
