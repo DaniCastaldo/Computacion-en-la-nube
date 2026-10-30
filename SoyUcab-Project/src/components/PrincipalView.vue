@@ -1448,12 +1448,17 @@ export default {
     },
     
     // ========== MÉTODOS AUXILIARES ==========
-    formatDateForAPI(dateString) {
-      if (!dateString) return null;
-      const date = new Date(dateString);
-      return date.toISOString().split('T')[0]; // YYYY-MM-DD
-    },
-    
+    formatDateForAPI(date) {
+      if (!date) return null;
+      // Si ya viene en formato YYYY-MM-DD (del input type="date"), la deja intacta
+      if (typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
+        return date;
+      }
+      // Si viene como objeto Date o texto convertible, la pasa a YYYY-MM-DD
+      const d = new Date(date);
+      return !isNaN(d.getTime()) ? d.toISOString().split('T')[0] : null;
+    }
+        
     generateInstitutionalEmail(personalEmail) {
       const username = personalEmail.split('@')[0];
       return `${username}@ucab.edu.ve`;
