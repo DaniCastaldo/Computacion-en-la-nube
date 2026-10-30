@@ -12,7 +12,7 @@
 
 
 /* Botón Ver Perfil */
-.btn-ver-perfil {
+.btn-ver-perfil, .btn-seguir {
     align-self: flex-start;
     background-color: transparent;
     border: 2px solid #3498db;
