@@ -20,6 +20,20 @@ Diagrama de arquitectura:
 <img width="2952" height="1542" alt="Diagrama V1" src="https://github.com/user-attachments/assets/dbc7489f-b8ce-48e3-8e29-d39fe9808ba5" />
 
 
+
+## DBaaS Supabase
+
+Se eligió trabajar con un DBaaS por el cero mantenimiento de servidores, no hay necesidad de instalar PostgreSQL o actualizar sistemas operativos. 
+Backups automáticos con respaldos continuos. 
+La nube garantiza que la base de datos se mantenga accesible sin caídas
+Tiene una alta escalabilidad debido a que se puede aumentar la memoria o almacenamiento. 
+
+En cuanto a supabase:
+* No tiene vendor lock-in debido a que se puede descargar el .sql y migrarlo a otro servicio. 
+* Maneja conexiones desde Node.js sin saturar la memoria. 
+* Interfaz fácil de utilizar con baja curva de aprendizaje. 
+* Plan gratuito ideal. 
+
 ## Contenerización (Docker)
 
 Se creó un `Dockerfile` para empaquetar la API Backend (`Backend-SoyUcab`).
