@@ -2,6 +2,10 @@ import { createRouter, createWebHistory } from 'vue-router'
 
 const routes = [
   {
+    path: '/',
+    redirect: '/principalview' // <-- Añade esta línea
+  },
+  {
     path: '/principalview',
     name: 'firstview',
     // Lazy-loading the component
