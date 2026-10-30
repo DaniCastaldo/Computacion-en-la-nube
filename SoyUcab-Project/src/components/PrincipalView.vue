@@ -1457,7 +1457,7 @@ export default {
       // Si viene como objeto Date o texto convertible, la pasa a YYYY-MM-DD
       const d = new Date(date);
       return !isNaN(d.getTime()) ? d.toISOString().split('T')[0] : null;
-    }
+    },
         
     generateInstitutionalEmail(personalEmail) {
       const username = personalEmail.split('@')[0];
