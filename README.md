@@ -59,7 +59,6 @@ Se realizó el despliegue del contenedor backend en la plataforma PaaS Render pa
 - **Plataforma:** Render (Web Service).
 - **Runtime:** Docker (construido desde el Dockerfile en la carpeta `Backend-SoyUcab`).
 - **Base de Datos:** Conexión remota activa con PostgreSQL en Supabase mediante TLS/SSL.
-- **URL Base de Producción:** https://soyucab-backend.onrender.com
 - **Endpoints de Verificación:**
   1. Estado del servicio (Health Check): https://soyucab-backend.onrender.com/api/health
   2. Catálogo de rutas de la API: https://soyucab-backend.onrender.com/api
