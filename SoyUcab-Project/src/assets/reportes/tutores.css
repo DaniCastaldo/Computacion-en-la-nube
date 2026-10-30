@@ -274,3 +274,30 @@ button:hover{
 .info-container::-webkit-scrollbar-thumb:hover {
     background: #1268c7;
 }
+
+.loading-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 40px;
+    color: #666;
+    font-style: italic;
+}
+
+.error-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 40px;
+    color: #d32f2f;
+    font-weight: bold;
+}
+
+.no-data, .no-results {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 40px;
+    color: #666;
+    font-style: italic;
+}

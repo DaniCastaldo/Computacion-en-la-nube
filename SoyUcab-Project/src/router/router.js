@@ -24,6 +24,28 @@ const routes = [
     name: 'GraduatesMap',
     // Lazy-loading the component
     component: () => import('../components/reportesVue/MapaEgresados.vue')
+  },
+  {
+    path: '/all-reports',
+    name: 'AllReports',
+    // Lazy-loading the component
+    component: () => import('../components/reportesVue/allReports.vue')
+  },
+  {
+    path: '/home',
+    name: 'Home',
+    // Lazy-loading the component
+    component: () => import('../components/home.vue')
+  },
+  {
+    path: '/profile',
+    name: 'Profile',
+    component: () => import('../components/Profile.vue')
+  },
+  {
+    path: '/groups/:name',
+    name: 'GroupDashboard',
+    component: () => import('../components/GroupDashboard.vue')
   }
   
 ]

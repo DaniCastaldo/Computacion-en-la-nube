@@ -145,11 +145,7 @@
         <p class="subtitle">Selecciona el tipo de cuenta que mejor se adapte a ti</p>
         
         <div class="user-type-grid">
-          <div 
-            class="user-type-card" 
-            :class="{ 'selected': userType === 'persona' }"
-            @click="selectUserType('persona')"
-          >
+          <div class="user-type-card" :class="{ 'selected': userType === 'persona' }"@click="selectUserType('persona')">
             <div class="icon">👤</div>
             <h3>Persona</h3>
             <p>Estudiante, egresado, profesor, personal</p>
@@ -697,7 +693,7 @@
           <label>Nombre Institucional *</label>
           <input 
             type="text" 
-            v-model="dependenciaData.nombre" 
+            v-model="dependenciaData.nombre_institucional" 
             placeholder="Ej: Departamento de Computación" 
             maxlength="100"
           />
@@ -749,8 +745,8 @@
           <div class="form-group">
             <label>Estado</label>
             <select v-model="dependenciaData.estado">
-              <option value="Activa">Activa</option>
-              <option value="Inactiva">Inactiva</option>
+              <option value="activa">Activa</option>
+              <option value="inactiva">Inactiva</option>
             </select>
           </div>
         </div>
@@ -914,469 +910,838 @@
   </div>
 </template>
 
-<script setup>
-import { ref, computed, reactive } from 'vue';
+<script>
+import api from '../services/usuarioSevices';
 
-// Estados principales
-const isLoginActive = ref(false);
-const currentStep = ref(1);
-const showPassword = ref(false);
-
-// Datos básicos
-const email = ref('');
-const loginEmail = ref('');
-const loginPassword = ref('');
-
-// Tipo de usuario
-const userType = ref('');
-const personaTipo = ref('');
-
-// Datos del formulario
-const userData = reactive({
-  telefono: '',
-  nombre_usuario: '',
-  contrasena: '',
-  biografia: ''
-});
-
-const passwordStrength = reactive({
-  valid: false
-});
-
-// Datos de persona
-const personaData = reactive({
-  ci: '',
-  sexo: '',
-  nombres: '',
-  apellidos: '',
-  fecha_nacimiento: '',
-  edad: 0,
-  empresa_actual: '',
-  idiomas: [],
-  habilidades: []
-});
-
-// Datos específicos por tipo
-const estudianteData = reactive({
-  carrera: '',
-  facultad: '',
-  semestre: '',
-  promedio: ''
-});
-
-const egresadoData = reactive({
-  facultad: '',
-  titulos: [],
-  fecha_grado: '',
-  pais: '',
-  estado: '',
-  menciones: [],
-  empresas: []
-});
-
-const profesorData = reactive({
-  fecha_ingreso: '',
-  categoria: '',
-  dedicacion: '',
-  estado: '',
-  fecha_fin: '',
-  facultades: [],
-  departamentos: [],
-  materias: []
-});
-
-const administrativoData = reactive({
-  cargo: '',
-  ubicacion: '',
-  dedicacion: ''
-});
-
-const obreroData = reactive({
-  cargo: '',
-  dedicacion: '',
-  empresa: ''
-});
-
-const dependenciaData = reactive({
-  nombre: '',
-  descripcion: '',
-  logo: '',
-  pagina_web: '',
-  fecha_creacion: '',
-  estado: 'Activa',
-  responsable: '',
-  ubicacion: '',
-  edificio: '',
-  tipo: ''
-});
-
-const organizacionData = reactive({
-  rif: '',
-  nombre: '',
-  descripcion: '',
-  logo: '',
-  pagina_web: '',
-  colaboraciones: [],
-  tipo: ''
-});
-
-// Estados para inputs multivalor
-const currentIdioma = ref('');
-const currentHabilidad = ref('');
-const currentTitulo = ref('');
-const currentMencion = ref('');
-const currentEmpresa = ref('');
-const currentFacultad = ref('');
-const currentDepartamento = ref('');
-const currentMateria = ref('');
-const currentColaboracion = ref('');
-
-// Estados de países y estados
-const estadosDisponibles = ref([]);
-const descripcionError = ref('');
-
-// Computed properties
-const totalSteps = computed(() => {
-  if (userType.value === 'persona') return 5;
-  return 4;
-});
-
-const isLastStep = computed(() => {
-  return currentStep.value === totalSteps.value;
-});
-
-// Mapeo de estados por país
-const estadosPorPais = {
-  'VE': ['Caracas', 'Zulia', 'Miranda', 'Carabobo', 'Aragua', 'Lara', 'Bolívar'],
-  'CO': ['Bogotá', 'Antioquia', 'Valle del Cauca', 'Santander', 'Cundinamarca'],
-  'ES': ['Madrid', 'Barcelona', 'Valencia', 'Sevilla', 'Andalucía'],
-  'US': ['Florida', 'California', 'Texas', 'Nueva York', 'Illinois'],
-  'MX': ['Ciudad de México', 'Jalisco', 'Nuevo León', 'Puebla', 'Veracruz']
-};
-
-// Métodos
-const switchToLogin = () => {
-  isLoginActive.value = true;
-};
-
-const switchToRegister = () => {
-  isLoginActive.value = false;
-  currentStep.value = 1;
-};
-
-const handleEmailSubmit = () => {
-  if (email.value && email.value.includes('@')) {
-    currentStep.value = 2;
-  } else {
-    alert('Por favor ingresa un correo electrónico válido');
-  }
-};
-
-const handleLogin = () => {
-  // Aquí iría la lógica de autenticación
-  alert('Login functionality would be implemented here');
-};
-
-const validatePassword = () => {
-  const password = userData.contrasena;
-  const hasUpper = /[A-Z]/.test(password);
-  const hasLower = /[a-z]/.test(password);
-  const hasNumber = /\d/.test(password);
-  const hasSpecial = /[$_\.%&!-]/.test(password);
-  const hasMinLength = password.length >= 8;
+export default {
+  name: 'RegistrationComponent',
   
-  passwordStrength.valid = hasUpper && hasLower && hasNumber && hasSpecial && hasMinLength;
-};
-
-const handleBasicInfoSubmit = () => {
-  if (!userData.telefono || !userData.nombre_usuario || !userData.contrasena) {
-    alert('Por favor completa todos los campos obligatorios');
-    return;
-  }
+  data() {
+    return {
+      // Estados principales
+      isLoginActive: false,
+      currentStep: 1,
+      showPassword: false,
+      loading: false,
+      errorMessage: '',
+      
+      // Datos básicos
+      email: '',
+      loginEmail: '',
+      loginPassword: '',
+      
+      // Tipo de usuario
+      userType: '',
+      personaTipo: '',
+      
+      // Datos del formulario (comunes a todos)
+      userData: {
+        telefono: '',
+        nombre_usuario: '',
+        contrasena: '',
+        biografia: '',
+        privacidad_perfil: 'publico'
+      },
+      
+      passwordStrength: {
+        valid: false
+      },
+      
+      // Datos de persona (solo cuando userType === 'persona')
+      personaData: {
+        ci: '',
+        sexo: 'M',
+        nombres: '',
+        apellidos: '',
+        fecha_nacimiento: '',
+        edad: 0,
+        empresa_actual: '',
+        idiomas: [],
+        habilidades: []
+      },
+      
+      // Datos específicos por tipo de persona
+      estudianteData: {
+        carrera: '',
+        facultad: '',
+        semestre: '',
+        promedio: ''
+      },
+      
+      egresadoData: {
+        facultad: '',
+        titulos: [],
+        fecha_grado: '',
+        pais: '',
+        estado: '',
+        menciones: [],
+        empresas: []
+      },
+      
+      profesorData: {
+        fecha_ingreso: '',
+        categoria: '',
+        dedicacion: '',
+        estado: 'activo',
+        fecha_fin: '',
+        facultades: [],
+        departamentos: [],
+        materias: []
+      },
+      
+      // Datos para dependencia (cuando userType === 'dependencia')
+      dependenciaData: {
+        nombre_institucional: '',  // ← CAMBIADO para coincidir con DB
+        descripcion: '',
+        logo: '',
+        pagina_web: '',
+        fecha_creacion: new Date().toISOString().split('T')[0],
+        estado: 'activa',  // ← CAMBIADO para coincidir con ENUM
+        responsable: '',
+        ubicacion_fisica: '',  // ← CAMBIADO
+        edificio: '',
+        tipo: ''
+      },
+      
+      // Datos para organización (cuando userType === 'organizacion')
+      organizacionData: {
+        rif: '',
+        nombre: '',
+        descripcion: '',
+        logo: '',
+        pagina_web: '',
+        tipos_colaboracion: [],  // ← CAMBIADO
+        tipo: ''
+      },
+      
+      // Estados para inputs multivalor
+      currentIdioma: '',
+      currentHabilidad: '',
+      currentTitulo: '',
+      currentMencion: '',
+      currentEmpresa: '',
+      currentFacultad: '',
+      currentDepartamento: '',
+      currentMateria: '',
+      currentColaboracion: '',
+      
+      // Estados de países y estados
+      estadosDisponibles: [],
+      descripcionError: '',
+      
+      // Mapeo de estados por país
+      estadosPorPais: {
+        'VE': ['Distrito Capital', 'Zulia', 'Miranda', 'Carabobo', 'Aragua', 'Lara', 'Bolívar', 'Táchira', 'Mérida', 'Anzoátegui'],
+        'CO': ['Bogotá D.C.', 'Antioquia', 'Valle del Cauca', 'Santander', 'Cundinamarca', 'Atlántico', 'Bolívar'],
+        'ES': ['Madrid', 'Barcelona', 'Valencia', 'Sevilla', 'Andalucía', 'Cataluña', 'País Vasco'],
+        'US': ['Florida', 'California', 'Texas', 'Nueva York', 'Illinois', 'Washington', 'Massachusetts'],
+        'MX': ['Ciudad de México', 'Jalisco', 'Nuevo León', 'Puebla', 'Veracruz', 'Estado de México', 'Guanajuato']
+      }
+    };
+  },
   
-  if (!passwordStrength.valid) {
-    alert('La contraseña no cumple con los requisitos de seguridad');
-    return;
-  }
-  
-  currentStep.value = 3;
-};
-
-const selectUserType = (type) => {
-  userType.value = type;
-};
-
-const handleUserTypeSubmit = () => {
-  if (!userType.value) {
-    alert('Por favor selecciona un tipo de usuario');
-    return;
-  }
-  
-  if (userType.value === 'persona') {
-    currentStep.value = 4;
-  } else {
-    // Dependencia u Organización van directo al paso 4 (que es su último paso)
-    currentStep.value = 4;
-  }
-};
-
-const calculateAge = () => {
-  if (personaData.fecha_nacimiento) {
-    const birthDate = new Date(personaData.fecha_nacimiento);
-    const today = new Date();
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
+  computed: {
+    totalSteps() {
+      // Dependencias y organizaciones tienen 4 pasos, personas tienen 5
+      return this.userType === 'persona' ? 5 : 4;
+    },
     
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
-    }
+    isLastStep() {
+      return this.currentStep === this.totalSteps;
+    },
     
-    personaData.edad = age;
-  }
-};
-
-// Métodos para arrays multivalor (idiomas)
-const addIdioma = () => {
-  if (currentIdioma.value.trim()) {
-    personaData.idiomas.push(currentIdioma.value.trim());
-    currentIdioma.value = '';
-  }
-};
-
-const removeIdioma = (index) => {
-  personaData.idiomas.splice(index, 1);
-};
-
-// Métodos para arrays multivalor (habilidades)
-const addHabilidad = () => {
-  if (currentHabilidad.value.trim()) {
-    personaData.habilidades.push(currentHabilidad.value.trim());
-    currentHabilidad.value = '';
-  }
-};
-
-const removeHabilidad = (index) => {
-  personaData.habilidades.splice(index, 1);
-};
-
-// Métodos para arrays multivalor (egresado)
-const addTitulo = () => {
-  if (currentTitulo.value.trim()) {
-    egresadoData.titulos.push(currentTitulo.value.trim());
-    currentTitulo.value = '';
-  }
-};
-
-const removeTitulo = (index) => {
-  egresadoData.titulos.splice(index, 1);
-};
-
-const addMencion = () => {
-  if (currentMencion.value.trim()) {
-    egresadoData.menciones.push(currentMencion.value.trim());
-    currentMencion.value = '';
-  }
-};
-
-const removeMencion = (index) => {
-  egresadoData.menciones.splice(index, 1);
-};
-
-const addEmpresa = () => {
-  if (currentEmpresa.value.trim()) {
-    egresadoData.empresas.push(currentEmpresa.value.trim());
-    currentEmpresa.value = '';
-  }
-};
-
-const removeEmpresa = (index) => {
-  egresadoData.empresas.splice(index, 1);
-};
-
-// Métodos para arrays multivalor (profesor)
-const addFacultad = () => {
-  if (currentFacultad.value.trim()) {
-    profesorData.facultades.push(currentFacultad.value.trim());
-    currentFacultad.value = '';
-  }
-};
-
-const removeFacultad = (index) => {
-  profesorData.facultades.splice(index, 1);
-};
-
-const addDepartamento = () => {
-  if (currentDepartamento.value.trim()) {
-    profesorData.departamentos.push(currentDepartamento.value.trim());
-    currentDepartamento.value = '';
-  }
-};
-
-const removeDepartamento = (index) => {
-  profesorData.departamentos.splice(index, 1);
-};
-
-const addMateria = () => {
-  if (currentMateria.value.trim()) {
-    profesorData.materias.push(currentMateria.value.trim());
-    currentMateria.value = '';
-  }
-};
-
-const removeMateria = (index) => {
-  profesorData.materias.splice(index, 1);
-};
-
-// Métodos para arrays multivalor (organización)
-const addColaboracion = () => {
-  if (currentColaboracion.value.trim()) {
-    organizacionData.colaboraciones.push(currentColaboracion.value.trim());
-    currentColaboracion.value = '';
-  }
-};
-
-const removeColaboracion = (index) => {
-  organizacionData.colaboraciones.splice(index, 1);
-};
-
-const handlePersonaInfoSubmit = () => {
-  // Validar campos obligatorios
-  if (!personaData.ci || !personaData.sexo || !personaData.nombres || !personaData.apellidos || 
-      !personaData.fecha_nacimiento || !personaTipo.value) {
-    alert('Por favor completa todos los campos obligatorios');
-    return;
-  }
-  
-  // Validar edad
-  if (personaData.edad < 16 || personaData.edad > 110) {
-    alert('La edad debe estar entre 16 y 110 años');
-    return;
-  }
-  
-  // Validar CI
-  if (personaData.ci.length < 7) {
-    alert('La cédula debe tener al menos 7 caracteres');
-    return;
-  }
-  
-  currentStep.value = 5;
-};
-
-const getPersonaTipoTitle = () => {
-  const titles = {
-    'estudiante': 'Estudiantil',
-    'egresado': 'de Egresado',
-    'profesor': 'Profesoral',
-    'administrativo': 'Administrativa',
-    'obrero': 'de Personal Obrero'
-  };
-  return titles[personaTipo.value] || '';
-};
-
-const updateEstados = () => {
-  if (egresadoData.pais && estadosPorPais[egresadoData.pais]) {
-    estadosDisponibles.value = estadosPorPais[egresadoData.pais];
-    egresadoData.estado = '';
-  } else {
-    estadosDisponibles.value = [];
-    egresadoData.estado = '';
-  }
-};
-
-const validateDescripcion = () => {
-  const desc = dependenciaData.descripcion;
-  if (desc && desc.length < 50) {
-    descripcionError.value = 'La descripción debe tener al menos 50 caracteres';
-  } else if (desc && desc.length > 500) {
-    descripcionError.value = 'La descripción no puede exceder 500 caracteres';
-  } else {
-    descripcionError.value = '';
-  }
-};
-
-const handleSpecificInfoSubmit = () => {
-  // Validaciones específicas según tipo
-  let isValid = true;
-  let errorMessage = '';
-  
-  if (personaTipo.value === 'estudiante') {
-    if (!estudianteData.carrera || !estudianteData.facultad || !estudianteData.semestre) {
-      isValid = false;
-      errorMessage = 'Por favor completa todos los campos obligatorios del estudiante';
+    isPersonaTypeValid() {
+      // Solo permitir tipos implementados en el backend actual
+      const validTypes = ['estudiante', 'egresado', 'profesor'];
+      return validTypes.includes(this.personaTipo);
     }
-  } else if (personaTipo.value === 'egresado') {
-    if (!egresadoData.facultad || !egresadoData.titulos.length || !egresadoData.fecha_grado || 
-        !egresadoData.pais || !egresadoData.estado) {
-      isValid = false;
-      errorMessage = 'Por favor completa todos los campos obligatorios del egresado';
+  },
+  
+  methods: {
+    // ========== MÉTODOS DE NAVEGACIÓN ==========
+    switchToLogin() {
+      this.isLoginActive = true;
+    },
+    
+    switchToRegister() {
+      this.isLoginActive = false;
+      this.currentStep = 1;
+      this.resetFormData();
+    },
+    
+    handleEmailSubmit() {
+      if (this.validateEmail(this.email)) {
+        this.currentStep = 2;
+      } else {
+        alert('Por favor ingresa un correo electrónico válido');
+      }
+    },
+    
+    resetFormData() {
+      // Resetea solo los datos según el tipo seleccionado
+      if (this.userType === 'persona') {
+        this.personaData = {
+          ci: '',
+          sexo: 'M',
+          nombres: '',
+          apellidos: '',
+          fecha_nacimiento: '',
+          edad: 0,
+          empresa_actual: '',
+          idiomas: [],
+          habilidades: []
+        };
+      } else if (this.userType === 'dependencia') {
+        this.dependenciaData = {
+          nombre_institucional: '',
+          descripcion: '',
+          logo: '',
+          pagina_web: '',
+          fecha_creacion: new Date().toISOString().split('T')[0],
+          estado: 'activa',
+          responsable: '',
+          ubicacion_fisica: '',
+          edificio: '',
+          tipo: ''
+        };
+      } else if (this.userType === 'organizacion') {
+        this.organizacionData = {
+          rif: '',
+          nombre: '',
+          descripcion: '',
+          logo: '',
+          pagina_web: '',
+          tipos_colaboracion: [],
+          tipo: ''
+        };
+      }
+    },
+    
+    // ========== MÉTODOS DE VALIDACIÓN ==========
+    validateEmail(email) {
+      const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      return re.test(email);
+    },
+    
+    validatePassword() {
+      const password = this.userData.contrasena;
+      const hasUpper = /[A-Z]/.test(password);
+      const hasLower = /[a-z]/.test(password);
+      const hasNumber = /\d/.test(password);
+      const hasSpecial = /[$_\.%&!-]/.test(password);
+      const hasMinLength = password.length >= 8;
+      
+      this.passwordStrength.valid = hasUpper && hasLower && hasNumber && hasSpecial && hasMinLength;
+    },
+    
+    calculateAge() {
+      if (this.personaData.fecha_nacimiento) {
+        const birthDate = new Date(this.personaData.fecha_nacimiento);
+        const today = new Date();
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const monthDiff = today.getMonth() - birthDate.getMonth();
+        
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+          age--;
+        }
+        
+        this.personaData.edad = age;
+      }
+    },
+    
+    // ========== MÉTODOS DE LOGIN ==========
+    async handleLogin() {
+      if (!this.loginEmail || !this.loginPassword) {
+        alert('Por favor ingresa correo y contraseña');
+        return;
+      }
+      
+      try {
+        this.loading = true;
+        this.errorMessage = '';
+        
+        const result = await api.login({
+          email: this.loginEmail,
+          contraseña: this.loginPassword
+        });
+        
+        if (result.success) {
+          const userName = result.data?.nombres || result.data?.user?.nombres || 'Usuario';
+          alert(`¡Bienvenido ${userName}!`);
+          
+          // Guardar usuario en localStorage
+          if (result.data) {
+            const userToStore = { ...result.data };
+            delete userToStore.contraseña;
+            localStorage.setItem('user', JSON.stringify(userToStore));
+            
+            // Guardar token si existe
+            if (result.token) {
+              localStorage.setItem('token', result.token);
+            }
+          }
+          
+          // Redirigir
+          window.location.href = '/home';
+        } else {
+          this.errorMessage = result.error || 'Error en el inicio de sesión';
+          alert(`Error: ${this.errorMessage}`);
+        }
+      } catch (error) {
+        console.error('Error en handleLogin:', error);
+        this.errorMessage = 'Error de conexión con el servidor';
+        alert(this.errorMessage);
+      } finally {
+        this.loading = false;
+      }
+    },
+    
+    // ========== MÉTODO PRINCIPAL DE REGISTRO ==========
+    async handleRegistration() {
+      // Validaciones básicas comunes
+      if (!this.email || !this.userData.nombre_usuario || !this.userData.contrasena) {
+        alert('Por favor completa todos los campos obligatorios');
+        return;
+      }
+      
+      if (!this.passwordStrength.valid) {
+        alert('La contraseña no cumple con los requisitos de seguridad');
+        return;
+      }
+      
+      try {
+        this.loading = true;
+        
+        // Datos base comunes
+        const baseData = {
+          email: this.email,
+          nombre_usuario: this.userData.nombre_usuario,
+          contraseña: this.userData.contrasena,
+          telefono: this.userData.telefono || null,
+          biografia: this.userData.biografia || '',
+          privacidad_perfil: this.userData.privacidad_perfil || 'publico'
+        };
+        
+        let userData;
+        
+        // ========== REGISTRO DE PERSONA ==========
+        if (this.userType === 'persona') {
+          // Validaciones específicas de persona
+          if (!this.personaData.ci || !this.personaData.nombres || !this.personaData.apellidos || !this.personaData.fecha_nacimiento) {
+            alert('Por favor completa todos los campos obligatorios de la persona');
+            this.loading = false;
+            return;
+          }
+          
+          if (!this.isPersonaTypeValid) {
+            alert('Tipo de persona no implementado. Selecciona: Estudiante, Egresado o Profesor');
+            this.loading = false;
+            return;
+          }
+          
+          userData = {
+            ...baseData,
+            nombres: this.personaData.nombres,
+            apellidos: this.personaData.apellidos,
+            ci: this.personaData.ci,
+            sexo: this.personaData.sexo,
+            fecha_nacimiento: this.formatDateForAPI(this.personaData.fecha_nacimiento),
+            ocupacion_actual: this.personaData.empresa_actual || null,
+            empresa_actual: this.personaData.empresa_actual || null,
+            influencer: false,
+            tutor: false,
+            tipo_miembro: this.personaTipo.charAt(0).toUpperCase() + this.personaTipo.slice(1)
+          };
+          
+          // Añadir datos específicos según tipo de persona
+          if (this.personaTipo === 'estudiante') {
+            if (!this.estudianteData.carrera || !this.estudianteData.facultad || !this.estudianteData.semestre) {
+              alert('Por favor completa todos los campos del estudiante');
+              this.loading = false;
+              return;
+            }
+            
+            Object.assign(userData, {
+              semestre: this.estudianteData.semestre,
+              carrera_programa: this.estudianteData.carrera,
+              facultad: this.estudianteData.facultad,
+              promedio: this.estudianteData.promedio || null,
+              email_dominio_estudiante: this.generateInstitutionalEmail(this.email)
+            });
+            
+          } else if (this.personaTipo === 'egresado') {
+            if (!this.egresadoData.facultad || !this.egresadoData.titulos.length || !this.egresadoData.fecha_grado || 
+                !this.egresadoData.pais || !this.egresadoData.estado) {
+              alert('Por favor completa todos los campos del egresado');
+              this.loading = false;
+              return;
+            }
+            
+            Object.assign(userData, {
+              facultad: this.egresadoData.facultad,
+              fecha_acto_grado: this.formatDateForAPI(this.egresadoData.fecha_grado),
+              pais: this.egresadoData.pais,
+              estado_egresado: this.egresadoData.estado
+            });
+            
+          } else if (this.personaTipo === 'profesor') {
+            if (!this.profesorData.fecha_ingreso || !this.profesorData.categoria || !this.profesorData.dedicacion) {
+              alert('Por favor completa todos los campos del profesor');
+              this.loading = false;
+              return;
+            }
+            
+            Object.assign(userData, {
+              categoria_profesor: this.profesorData.categoria,
+              dedicacion_profesor: this.profesorData.dedicacion,
+              fecha_ingreso_profesor: this.formatDateForAPI(this.profesorData.fecha_ingreso)
+            });
+          }
+          
+        // ========== REGISTRO DE DEPENDENCIA ==========
+        } else if (this.userType === 'dependencia') {
+          // Validaciones específicas de dependencia
+          if (!this.dependenciaData.nombre_institucional || !this.dependenciaData.descripcion) {
+            alert('Para dependencia: nombre institucional y descripción son requeridos');
+            this.loading = false;
+            return;
+          }
+          
+          // Validar longitud de descripción
+          if (this.dependenciaData.descripcion.length < 50 || this.dependenciaData.descripcion.length > 500) {
+            alert('La descripción debe tener entre 50 y 500 caracteres');
+            this.loading = false;
+            return;
+          }
+          
+          userData = {
+            ...baseData,
+            tipo_entidad: 'dependencia',
+            nombre_institucional: this.dependenciaData.nombre_institucional,
+            descripcion: this.dependenciaData.descripcion,
+            logo: this.dependenciaData.logo || null,
+            pagina_web: this.dependenciaData.pagina_web || null,
+            fecha_creacion: this.formatDateForAPI(this.dependenciaData.fecha_creacion),
+            estado: this.dependenciaData.estado,
+            responsable: this.dependenciaData.responsable || 'Administrador',
+            ubicacion_fisica: this.dependenciaData.ubicacion_fisica || null,
+            edificio: this.dependenciaData.edificio || null,
+            tipo_dependencia: this.dependenciaData.tipo || null
+          };
+          
+        // ========== REGISTRO DE ORGANIZACIÓN ==========
+        } else if (this.userType === 'organizacion') {
+          // Validaciones específicas de organización
+          if (!this.organizacionData.rif || !this.organizacionData.nombre) {
+            alert('Para organización: RIF y nombre son requeridos');
+            this.loading = false;
+            return;
+          }
+          
+          userData = {
+            ...baseData,
+            tipo_entidad: 'organizacion',
+            rif: this.organizacionData.rif,
+            nombre: this.organizacionData.nombre,
+            descripcion: this.organizacionData.descripcion || null,
+            logo: this.organizacionData.logo || null,
+            pagina_web: this.organizacionData.pagina_web || null,
+            tipos_colaboracion: this.organizacionData.tipos_colaboracion,
+            tipo_organizacion: this.organizacionData.tipo || null
+          };
+          
+        } else {
+          alert('Tipo de usuario no válido');
+          this.loading = false;
+          return;
+        }
+        
+        console.log('Enviando datos al backend:', userData);
+        
+        // Llamar al servicio de registro
+        const result = await api.registerUser(userData);
+        
+        if (result.success) {
+          console.log('Registro exitoso:', result.data);
+          alert('¡Cuenta creada exitosamente!');
+          
+          // Guardar datos básicos en localStorage
+          const userToStore = {
+            email: userData.email,
+            nombre_usuario: userData.nombre_usuario,
+            tipo_usuario: this.userType,
+            fecha_registro: new Date().toISOString()
+          };
+          
+          // Añadir datos específicos según tipo
+          if (this.userType === 'persona') {
+            userToStore.nombres = userData.nombres;
+            userToStore.apellidos = userData.apellidos;
+            userToStore.tipo_miembro = userData.tipo_miembro;
+          } else if (this.userType === 'dependencia') {
+            userToStore.nombre_institucional = userData.nombre_institucional;
+          } else if (this.userType === 'organizacion') {
+            userToStore.nombre = userData.nombre;
+          }
+          
+          localStorage.setItem('user', JSON.stringify(userToStore));
+          
+          // Intentar login automático
+          await this.autoLoginAfterRegister(userData.email, userData.contraseña);
+          
+        } else {
+          // Manejar errores
+          let errorMsg = result.error || 'Error en el registro';
+          
+          if (result.missing && result.missing.length > 0) {
+            errorMsg += `\nCampos faltantes: ${result.missing.join(', ')}`;
+          }
+          
+          if (result.details) {
+            errorMsg += `\nDetalles: ${result.details}`;
+          }
+          
+          alert(errorMsg);
+        }
+        
+      } catch (error) {
+        console.error('Error en handleRegistration:', error);
+        alert('Error de conexión con el servidor. Por favor intenta nuevamente.');
+      } finally {
+        this.loading = false;
+      }
+    },
+    
+    // ========== LOGIN AUTOMÁTICO DESPUÉS DEL REGISTRO ==========
+    async autoLoginAfterRegister(email, password) {
+      try {
+        console.log('Intentando login automático...');
+        
+        const loginResult = await api.login({
+          email: email,
+          contraseña: password
+        });
+        
+        if (loginResult.success && loginResult.data) {
+          console.log('Login automático exitoso');
+          
+          // Actualizar datos del usuario
+          const userData = { ...loginResult.data };
+          delete userData.contraseña;
+          localStorage.setItem('user', JSON.stringify(userData));
+          
+          // Guardar token si existe
+          if (loginResult.token) {
+            localStorage.setItem('token', loginResult.token);
+          }
+          
+          // Redirigir al dashboard
+          window.location.href = '/home';
+        } else {
+          console.warn('Login automático falló, redirigiendo a login');
+          window.location.href = '/login';
+        }
+      } catch (loginError) {
+        console.warn('Error en login automático:', loginError);
+        window.location.href = '/login';
+      }
+    },
+    
+    // ========== MÉTODOS AUXILIARES ==========
+    formatDateForAPI(dateString) {
+      if (!dateString) return null;
+      const date = new Date(dateString);
+      return date.toISOString().split('T')[0]; // YYYY-MM-DD
+    },
+    
+    generateInstitutionalEmail(personalEmail) {
+      const username = personalEmail.split('@')[0];
+      return `${username}@ucab.edu.ve`;
+    },
+    
+    // ========== NAVEGACIÓN ENTRE PASOS ==========
+    handleBasicInfoSubmit() {
+      if (!this.userData.telefono || !this.userData.nombre_usuario || !this.userData.contrasena) {
+        alert('Por favor completa todos los campos obligatorios');
+        return;
+      }
+      
+      if (!this.passwordStrength.valid) {
+        alert('La contraseña no cumple con los requisitos de seguridad');
+        return;
+      }
+      
+      this.currentStep = 3;
+    },
+    
+    selectUserType(type) {
+      this.userType = type;
+      this.resetFormData();
+    },
+    
+    handleUserTypeSubmit() {
+      if (!this.userType) {
+        alert('Por favor selecciona un tipo de usuario');
+        return;
+      }
+      
+      // Avanzar al siguiente paso según el tipo
+      this.currentStep = 4;
+    },
+    
+    handlePersonaInfoSubmit() {
+      // Validar campos obligatorios
+      if (!this.personaData.ci || !this.personaData.sexo || !this.personaData.nombres || 
+          !this.personaData.apellidos || !this.personaData.fecha_nacimiento || !this.personaTipo) {
+        alert('Por favor completa todos los campos obligatorios');
+        return;
+      }
+      
+      // Validar edad
+      if (this.personaData.edad < 16 || this.personaData.edad > 110) {
+        alert('La edad debe estar entre 16 y 110 años');
+        return;
+      }
+      
+      // Validar CI
+      if (this.personaData.ci.length < 7) {
+        alert('La cédula debe tener al menos 7 caracteres');
+        return;
+      }
+      
+      // Validar tipo de persona
+      if (!this.isPersonaTypeValid) {
+        alert('Tipo de persona no implementado. Selecciona: Estudiante, Egresado o Profesor');
+        return;
+      }
+      
+      this.currentStep = 5;
+    },
+    
+    handleSpecificInfoSubmit() {
+      // Validaciones específicas según tipo de persona
+      let isValid = true;
+      let errorMessage = '';
+      
+      if (this.personaTipo === 'estudiante') {
+        if (!this.estudianteData.carrera || !this.estudianteData.facultad || !this.estudianteData.semestre) {
+          isValid = false;
+          errorMessage = 'Por favor completa todos los campos obligatorios del estudiante';
+        }
+      } else if (this.personaTipo === 'egresado') {
+        if (!this.egresadoData.facultad || !this.egresadoData.titulos.length || !this.egresadoData.fecha_grado || 
+            !this.egresadoData.pais || !this.egresadoData.estado) {
+          isValid = false;
+          errorMessage = 'Por favor completa todos los campos obligatorios del egresado';
+        }
+      } else if (this.personaTipo === 'profesor') {
+        if (!this.profesorData.fecha_ingreso || !this.profesorData.categoria || !this.profesorData.dedicacion) {
+          isValid = false;
+          errorMessage = 'Por favor completa todos los campos obligatorios del profesor';
+        }
+      }
+      
+      if (!isValid) {
+        alert(errorMessage);
+        return;
+      }
+      
+      // Ir al paso de confirmación
+      this.currentStep = 6;
+    },
+    
+    // ========== MÉTODOS PARA DEPENDENCIAS ==========
+    handleDependenciaSubmit() {
+      // Validaciones específicas de dependencia
+      if (!this.dependenciaData.nombre_institucional || !this.dependenciaData.descripcion) {
+        alert('Para dependencia: nombre institucional y descripción son requeridos');
+        return;
+      }
+      
+      // Validar longitud de descripción
+      if (this.dependenciaData.descripcion.length < 50 || this.dependenciaData.descripcion.length > 500) {
+        alert('La descripción debe tener entre 50 y 500 caracteres');
+        return;
+      }
+      
+      // Validar página web si se proporciona
+      if (this.dependenciaData.pagina_web && !this.dependenciaData.pagina_web.startsWith('https://')) {
+        alert('La página web debe comenzar con https://');
+        return;
+      }
+      
+      // Ir al paso de confirmación
+      this.currentStep = 6;
+    },
+    
+    // ========== MÉTODOS PARA ORGANIZACIONES ==========
+    handleOrganizacionSubmit() {
+      // Validaciones específicas de organización
+      if (!this.organizacionData.rif || !this.organizacionData.nombre) {
+        alert('Para organización: RIF y nombre son requeridos');
+        return;
+      }
+      
+      // Validar página web si se proporciona
+      if (this.organizacionData.pagina_web && !this.organizacionData.pagina_web.startsWith('https://')) {
+        alert('La página web debe comenzar con https://');
+        return;
+      }
+      
+      // Ir al paso de confirmación
+      this.currentStep = 6;
+    },
+    
+    validateDescripcion() {
+      const desc = this.dependenciaData.descripcion;
+      if (desc && desc.length < 50) {
+        this.descripcionError = 'La descripción debe tener al menos 50 caracteres';
+      } else if (desc && desc.length > 500) {
+        this.descripcionError = 'La descripción no puede exceder 500 caracteres';
+      } else {
+        this.descripcionError = '';
+      }
+    },
+    
+    // ========== MÉTODOS PARA ARRAYS MULTIVALOR ==========
+    // (Mantén todos los métodos existentes para arrays multivalor)
+    addIdioma() {
+      if (this.currentIdioma.trim()) {
+        this.personaData.idiomas.push(this.currentIdioma.trim());
+        this.currentIdioma = '';
+      }
+    },
+    
+    removeIdioma(index) {
+      this.personaData.idiomas.splice(index, 1);
+    },
+    
+    addHabilidad() {
+      if (this.currentHabilidad.trim()) {
+        this.personaData.habilidades.push(this.currentHabilidad.trim());
+        this.currentHabilidad = '';
+      }
+    },
+    
+    removeHabilidad(index) {
+      this.personaData.habilidades.splice(index, 1);
+    },
+    
+    addTitulo() {
+      if (this.currentTitulo.trim()) {
+        this.egresadoData.titulos.push(this.currentTitulo.trim());
+        this.currentTitulo = '';
+      }
+    },
+    
+    removeTitulo(index) {
+      this.egresadoData.titulos.splice(index, 1);
+    },
+    
+    addMencion() {
+      if (this.currentMencion.trim()) {
+        this.egresadoData.menciones.push(this.currentMencion.trim());
+        this.currentMencion = '';
+      }
+    },
+    
+    removeMencion(index) {
+      this.egresadoData.menciones.splice(index, 1);
+    },
+    
+    addEmpresa() {
+      if (this.currentEmpresa.trim()) {
+        this.egresadoData.empresas.push(this.currentEmpresa.trim());
+        this.currentEmpresa = '';
+      }
+    },
+    
+    removeEmpresa(index) {
+      this.egresadoData.empresas.splice(index, 1);
+    },
+    
+    addFacultad() {
+      if (this.currentFacultad.trim()) {
+        this.profesorData.facultades.push(this.currentFacultad.trim());
+        this.currentFacultad = '';
+      }
+    },
+    
+    removeFacultad(index) {
+      this.profesorData.facultades.splice(index, 1);
+    },
+    
+    addDepartamento() {
+      if (this.currentDepartamento.trim()) {
+        this.profesorData.departamentos.push(this.currentDepartamento.trim());
+        this.currentDepartamento = '';
+      }
+    },
+    
+    removeDepartamento(index) {
+      this.profesorData.departamentos.splice(index, 1);
+    },
+    
+    addMateria() {
+      if (this.currentMateria.trim()) {
+        this.profesorData.materias.push(this.currentMateria.trim());
+        this.currentMateria = '';
+      }
+    },
+    
+    removeMateria(index) {
+      this.profesorData.materias.splice(index, 1);
+    },
+    
+    addColaboracion() {
+      if (this.currentColaboracion.trim()) {
+        this.organizacionData.tipos_colaboracion.push(this.currentColaboracion.trim());
+        this.currentColaboracion = '';
+      }
+    },
+    
+    removeColaboracion(index) {
+      this.organizacionData.tipos_colaboracion.splice(index, 1);
+    },
+    
+    // ========== MÉTODOS PARA MANEJAR ESTADOS DE PAÍSES ==========
+    updateEstados() {
+      if (this.egresadoData.pais && this.estadosPorPais[this.egresadoData.pais]) {
+        this.estadosDisponibles = this.estadosPorPais[this.egresadoData.pais];
+        this.egresadoData.estado = '';
+      } else {
+        this.estadosDisponibles = [];
+        this.egresadoData.estado = '';
+      }
+    },
+    
+    // ========== MÉTODOS DE UI ==========
+    getPersonaTipoTitle() {
+      const titles = {
+        'estudiante': 'Estudiantil',
+        'egresado': 'de Egresado',
+        'profesor': 'Profesoral',
+        'administrativo': 'Administrativa',
+        'obrero': 'de Personal Obrero'
+      };
+      return titles[this.personaTipo] || '';
+    },
+    
+    getUserDisplayName() {
+      if (this.userType === 'persona') {
+        return `${this.personaData.nombres} ${this.personaData.apellidos}`;
+      } else if (this.userType === 'dependencia') {
+        return this.dependenciaData.nombre_institucional;
+      } else if (this.userType === 'organizacion') {
+        return this.organizacionData.nombre;
+      }
+      return 'Usuario';
+    },
+    
+    // ========== MÉTODO DE CONFIRMACIÓN FINAL ==========
+    handleConfirmation() {
+      this.handleRegistration();
     }
-  } else if (personaTipo.value === 'profesor') {
-    if (!profesorData.fecha_ingreso || !profesorData.categoria || !profesorData.dedicacion || 
-        !profesorData.estado) {
-      isValid = false;
-      errorMessage = 'Por favor completa todos los campos obligatorios del profesor';
-    }
-  } else if (personaTipo.value === 'administrativo') {
-    if (!administrativoData.cargo || !administrativoData.ubicacion || !administrativoData.dedicacion) {
-      isValid = false;
-      errorMessage = 'Por favor completa todos los campos obligatorios del administrativo';
-    }
-  } else if (personaTipo.value === 'obrero') {
-    if (!obreroData.cargo || !obreroData.dedicacion || !obreroData.empresa) {
-      isValid = false;
-      errorMessage = 'Por favor completa todos los campos obligatorios del personal obrero';
-    }
   }
-  
-  if (!isValid) {
-    alert(errorMessage);
-    return;
-  }
-  
-  // Simular creación de cuenta
-  currentStep.value = 6;
-};
-
-const handleDependenciaSubmit = () => {
-  if (!dependenciaData.nombre || !dependenciaData.descripcion || !dependenciaData.tipo) {
-    alert('Por favor completa todos los campos obligatorios de la dependencia');
-    return;
-  }
-  
-  if (dependenciaData.descripcion.length < 50) {
-    alert('La descripción debe tener al menos 50 caracteres');
-    return;
-  }
-  
-  // Simular creación de cuenta
-  currentStep.value = 6;
-};
-
-const handleOrganizacionSubmit = () => {
-  if (!organizacionData.rif || !organizacionData.nombre || !organizacionData.tipo) {
-    alert('Por favor completa todos los campos obligatorios de la organización');
-    return;
-  }
-  
-  // Simular creación de cuenta
-  currentStep.value = 6;
-};
-
-const getUserDisplayName = () => {
-  if (userType.value === 'persona') {
-    return `${personaData.nombres} ${personaData.apellidos}`;
-  } else if (userType.value === 'dependencia') {
-    return dependenciaData.nombre;
-  } else if (userType.value === 'organizacion') {
-    return organizacionData.nombre;
-  }
-  return 'Usuario';
-};
-
-const handleConfirmation = () => {
-  // Aquí se redirigiría al dashboard o página principal
-  alert('Redirigiendo a la plataforma...');
-  // window.location.href = '/dashboard';
 };
 </script>
-
