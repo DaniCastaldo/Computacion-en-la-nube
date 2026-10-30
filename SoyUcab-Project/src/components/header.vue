@@ -1,6 +1,6 @@
 <template>
      <header>
-            <div class="logoUcab"><img src="../../../public/logo-ucab3.png" alt="Logo Ucab"></div>
+            <div class="logoUcab"><img src="/logo-ucab3.png" alt="Logo Ucab"></div>
             <div class="buscador"><input type="text" name="" id=""></div>
             <div class="NavBar">
                 <button id='home' @click="gotoHome"></button>
