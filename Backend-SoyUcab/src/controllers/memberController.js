@@ -529,13 +529,14 @@ const memberController = {
           );
 
           // Insertar profesor
+          // Insertar profesor
           await db.query(
             `INSERT INTO soyucab.profesor 
-             (email_persona, tipo_rol, fecha_inicio, fecha_ingreso, categoria, dedicacion)
-             VALUES ($1, 'Profesor', CURRENT_DATE, $2, $3, $4)`,
+               (email_persona, tipo_rol, fecha_inicio, fecha_ingreso, categoria, dedicacion)
+             VALUES ($1, 'Profesor', CURRENT_DATE, COALESCE($2, CURRENT_DATE), $3, $4)`,
             [
               email,
-              fecha_ingreso_profesor || CURRENT_DATE,
+              fecha_ingreso_profesor ? new Date(fecha_ingreso_profesor).toISOString().split('T')[0] : null,
               categoria_profesor || null,
               dedicacion_profesor || null
             ]
