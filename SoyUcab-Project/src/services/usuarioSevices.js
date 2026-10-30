@@ -29,11 +29,19 @@ export default {
             error: 'La fecha de nacimiento es requerida'
           };
         }
+
+        const normalizedDate = this.formatDate(userData.fecha_nacimiento);
+        if (!normalizedDate) {
+          return {
+            success: false,
+            error: 'La fecha de nacimiento debe ser válida (ejemplo: 1995-10-16 o 16 de octubre de 1995)'
+          };
+        }
         
-        // Formatear fecha si es necesario
+        // Formatear fecha a ISO para PostgreSQL
         formattedData = {
           ...userData,
-          fecha_nacimiento: this.formatDate(userData.fecha_nacimiento)
+          fecha_nacimiento: normalizedDate
         };
         
         console.log('Enviando persona a /members:', formattedData);
@@ -155,24 +163,48 @@ export default {
     }
   },
 
-  // Función auxiliar para formatear fecha
+  // Función auxiliar para formatear fecha a YYYY-MM-DD
   formatDate(dateString) {
     if (!dateString) return null;
-    
-    // Si ya está en formato YYYY-MM-DD
-    if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
-      return dateString;
+
+    const value = String(dateString).trim();
+    if (!value) return null;
+
+    // YYYY-MM-DD
+    if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+      return value;
     }
-    
-    // Convertir de otros formatos
-    try {
-      const date = new Date(dateString);
-      if (isNaN(date.getTime())) return dateString;
-      
-      return date.toISOString().split('T')[0]; // YYYY-MM-DD
-    } catch {
-      return dateString;
+
+    // DD/MM/YYYY o DD-MM-YYYY
+    const slashMatch = value.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})$/);
+    if (slashMatch) {
+      const [, day, month, year] = slashMatch;
+      return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
     }
+
+    // 16 de octubre de 1995
+    const spanishMatch = value.match(/^(\d{1,2})\s+de\s+([a-záéíóú]+)\s+de\s+(\d{4})$/i);
+    if (spanishMatch) {
+      const meses = {
+        enero: '01', febrero: '02', marzo: '03', abril: '04',
+        mayo: '05', junio: '06', julio: '07', agosto: '08',
+        septiembre: '09', setiembre: '09', octubre: '10',
+        noviembre: '11', diciembre: '12'
+      };
+
+      const [, day, monthName, year] = spanishMatch;
+      const month = meses[monthName.toLowerCase()];
+      if (!month) return null;
+      return `${year}-${month}-${String(day).padStart(2, '0')}`;
+    }
+
+    // Date ISO o string parseable
+    const date = new Date(value);
+    if (!Number.isNaN(date.getTime())) {
+      return date.toISOString().slice(0, 10);
+    }
+
+    return null;
   },
 
   async login(credentials) {
@@ -557,17 +589,6 @@ export default {
 
   setStoredUser(user) {
     localStorage.setItem('user', JSON.stringify(user));
-  },
-
-  // Helper para formatear fechas
-  formatDate(dateString) {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('es-ES', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
   },
 
   // Helper para formatear nombres de países
