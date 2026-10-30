@@ -9,7 +9,7 @@
                 <button id='perfil' @click="gotoProfile"></button>
                 <button id='reportsButtom' @click="gotoAllReports">
                     <div class="contenido-boton">
-                        <img src='../../../public/insignia.png' alt='Reportes'>
+                        <img src='/insignia.png' alt='Reportes'>
                         <h2>Reportes</h2>
                     </div>
                 </button>
