@@ -17,7 +17,8 @@ Problemática que Resuelve:
 
 Diagrama de arquitectura:  
 
-<img width="457" height="772" alt="image" src="https://github.com/user-attachments/assets/35af1db3-9a98-4488-91b2-37405a9723e8" />
+<img width="2952" height="1542" alt="Diagrama V1" src="https://github.com/user-attachments/assets/dbc7489f-b8ce-48e3-8e29-d39fe9808ba5" />
+
 
 ## Contenerización (Docker)
 
